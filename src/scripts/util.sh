@@ -1,4 +1,4 @@
-#!/bin/sh
+#!/bin/bash
 
 # Helper function to output error messages to STDERR, with red text
 error() {
@@ -29,8 +29,9 @@ parse_keyfiles() {
 # keyfiles), return 1 otherwise
 keyfiles_exist() {
     for keyfile in $(parse_keyfiles $1); do
-        if [ ! -f $keyfile ]; then
-            echo "Couldn't find keyfile $keyfile for $1"
+	    currentfile=${keyfile//$'\r'/}
+        if [ ! -f $currentfile ]; then
+            echo "Couldn't find keyfile $currentfile for $1"
             return 1
         fi
     done

@@ -91,3 +91,22 @@ is_renewal_required() {
     is_finshed_week_sec=$(( ($one_week_sec - $last_renewal_delta_sec) ))
     [ $is_finshed_week_sec -lt 0 ]
 }
+
+# symlinks any *.conf files in /etc/nginx/user.conf.d
+# to /etc/nginx/conf.d so they are included as configs
+# this allows a user to easily mount their own configs
+link_user_configs() {
+    SOURCE_DIR=${1-/etc/nginx/user.conf.d}
+    TARGET_DIR=${2-/etc/nginx/conf.d}
+
+    echo "symlinking scripts from ${SOURCE_DIR} to ${TARGET_DIR}"
+
+    if [ ! -d "$SOURCE_DIR" ]; then
+        echo "no ${SOURCE_DIR}, nothing to do."
+    else
+        for conf in ${SOURCE_DIR}/*.conf; do
+            echo "symlinking: ${conf}" "${TARGET_DIR}/$(basename ${conf})"
+            ln -s "${conf}" "${TARGET_DIR}/$(basename ${conf})"
+        done
+    fi
+}

@@ -38,7 +38,7 @@ if [ $WEBROOT ]
 then
   args=" --webroot -w $WEBROOT"
 else
-  args=" --standalone --standalone-supported-challenges http-01"
+  args=" --standalone --preferred-challenges http-01"
 fi
 
 if $DEBUG

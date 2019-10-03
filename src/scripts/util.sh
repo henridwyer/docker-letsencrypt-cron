@@ -96,8 +96,8 @@ is_renewal_required() {
 # to /etc/nginx/conf.d so they are included as configs
 # this allows a user to easily mount their own configs
 link_user_configs() {
-    SOURCE_DIR=${1-/etc/nginx/user.conf.d}
-    TARGET_DIR=${2-/etc/nginx/conf.d}
+    SOURCE_DIR="${1-/etc/nginx/user.conf.d}"
+    TARGET_DIR="${2-/etc/nginx/conf.d}"
 
     echo "symlinking scripts from ${SOURCE_DIR} to ${TARGET_DIR}"
 
@@ -105,8 +105,7 @@ link_user_configs() {
         echo "no ${SOURCE_DIR}, nothing to do."
     else
         for conf in ${SOURCE_DIR}/*.conf; do
-            echo "symlinking: ${conf}" "${TARGET_DIR}/$(basename ${conf})"
-            ln -s "${conf}" "${TARGET_DIR}/$(basename ${conf})"
+            ln -sv "${conf}" "${TARGET_DIR}/$(basename ${conf})"
         done
     fi
 }

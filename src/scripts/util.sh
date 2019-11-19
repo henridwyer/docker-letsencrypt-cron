@@ -60,8 +60,8 @@ auto_enable_configs() {
 # EMAIL environment variable, to register the proper support email address.
 get_certificate() {
     echo "Getting certificate for domain $1 on behalf of user $2"
-    PRODUCTION_URL='https://acme-v01.api.letsencrypt.org/directory'
-    STAGING_URL='https://acme-staging.api.letsencrypt.org/directory'
+    PRODUCTION_URL='https://acme-v02.api.letsencrypt.org/directory'
+    STAGING_URL='https://acme-staging-v02.api.letsencrypt.org/directory'
 
     if [ "${IS_STAGING}" = "1" ]; then
         letsencrypt_url=$STAGING_URL

@@ -7,6 +7,9 @@ trap "kill 0" EXIT
 # Source in util.sh so we can have our nice tools
 . $(cd $(dirname $0); pwd)/util.sh
 
+# first include any user configs if they've been mounted
+link_user_configs
+
 # Immediately run auto_enable_configs so that nginx is in a runnable state
 auto_enable_configs
 

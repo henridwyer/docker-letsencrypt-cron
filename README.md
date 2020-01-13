@@ -1,19 +1,14 @@
 # docker-nginx-certbot
-Create and automatically renew website SSL certificates using the letsencrypt free certificate authority, and its client *certbot*, built on top of the nginx server.
+Create and automatically renew website SSL certificates using the free [letsencrypt](https://letsencrypt.org/) certificate authority, and its client [*certbot*](https://certbot.eff.org/), built on top of the [nginx](https://www.nginx.com/) webserver.
 
-# More information
-
-Find out more about letsencrypt: https://letsencrypt.org
-
-Certbot github: https://github.com/certbot/certbot
-
-This repository was originally forked from `@henridwyer`, many thanks to him for the good idea.  I've rewritten about 90% of this repository, so it bears almost no resemblance to the original.  This repository is _much_ more opinionated about the structure of your webservers/containers, however it is easier to use as long as all of your webservers follow that pattern.
+This repository was originally forked from `@henridwyer`, many thanks to him for the good idea.  It has since been completely rewritten, and bears almost no resemblance to the original.  This repository is _much_ more opinionated about the structure of your webservers/containers, however it is easier to use as long as all of your webservers follow the given pattern.
 
 # Usage
 
 Create a config directory for your custom configs:
-```
-mkdir conf.d
+
+```bash
+$ mkdir conf.d
 ```
 
 And a `.conf` in that directory:
@@ -36,18 +31,61 @@ version: '3'
 services:
     frontend:
         restart: unless-stopped
-        build: frontend
+        image: staticfloat/nginx-certbot
         ports:
             - 80:80/tcp
             - 443:443/tcp
         environment:
-            - CERTBOT_EMAIL=owner@company.com
+            CERTBOT_EMAIL: owner@company.com
         volumes:
-          - ./conf.d:/etc/nginx/user.conf.d :ro
-  ...
+          - ./conf.d:/etc/nginx/user.conf.d:ro
+          - letsencrypt:/etc/letsencrypt
+volumes:
+    letsencrypt:
+```
+
+Launch that docker-compose file, and you're good to go; `certbot` will automatically request an SSL certificate for any `nginx` sites that look for SSL certificates in `/etc/letsencrypt/live`, and will automatically renew them over time.
+
+## Templating
+
+You may wish to template your configurations, e.g. passing in a hostname so as to be able to run multiple identical copies of this container; one per website.  The docker container will use [`envsubst`](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html) to template all mounted user configs with a user-provided list of environment variables.  Example:
+
+```nginx
+# In conf.d/nginx_template.conf
+server {
+    listen              443 ssl;
+    server_name         ${FQDN};
+    ssl_certificate     /etc/letsencrypt/live/${FQDN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;
+
+    ...
+}
+```
+
+```yml
+version: '3'
+services:
+    frontend:
+        restart: unless-stopped
+        image: staticfloat/nginx-certbot
+        ports:
+            - 80:80/tcp
+            - 443:443/tcp
+        environment:
+            CERTBOT_EMAIL: owner@company.com
+            ENVSUBST_VARS: FQDN
+            FQDN: server.company.com
+        volumes:
+          - ./conf.d:/etc/nginx/user.conf.d:ro
+          - letsencrypt:/etc/letsencrypt
+volumes:
+    letsencrypt:
 ```
 
 # Changelog
+
+### 1.0
+- Many improvements thanks to contributors from across the globe.  Together, we have drastically reduced the amount of customization needed; configs can be mounted directly into a prebuilt image, and the configurations can even be templated.
 
 ### 0.8
 - Ditch cron, it never liked me anway.  Just use `sleep` and a `while` loop instead.

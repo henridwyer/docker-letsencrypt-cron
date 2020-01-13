@@ -93,20 +93,26 @@ is_renewal_required() {
     [ $is_finshed_week_sec -lt 0 ]
 }
 
-# symlinks any *.conf files in /etc/nginx/user.conf.d
+# copies any *.conf files in /etc/nginx/user.conf.d
 # to /etc/nginx/conf.d so they are included as configs
 # this allows a user to easily mount their own configs
-link_user_configs() {
+# We make use of `envsubst` to allow for on-the-fly templating
+# of the user configs.
+template_user_configs() {
     SOURCE_DIR="${1-/etc/nginx/user.conf.d}"
     TARGET_DIR="${2-/etc/nginx/conf.d}"
 
-    echo "symlinking scripts from ${SOURCE_DIR} to ${TARGET_DIR}"
+    # envsubst needs dollar signs in front of all variable names
+    DENV=$(echo ${ENVSUBST_VARS} | sed -E 's/\$*([^ ]+)/\$\1/g')
+
+    echo "templating scripts from ${SOURCE_DIR} to ${TARGET_DIR}"
+    echo "Substituting variables ${DENV}"
 
     if [ ! -d "$SOURCE_DIR" ]; then
         echo "no ${SOURCE_DIR}, nothing to do."
     else
         for conf in ${SOURCE_DIR}/*.conf; do
-            ln -sv "${conf}" "${TARGET_DIR}/$(basename ${conf})"
+            envsubst "${DENV}" <"${conf}" > "${TARGET_DIR}/$(basename ${conf})"
         done
     fi
 }

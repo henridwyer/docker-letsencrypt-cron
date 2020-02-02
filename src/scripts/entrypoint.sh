@@ -42,6 +42,6 @@ while [ true ]; do
     # If nginx quit for whatever reason then stop the container.
     # Leave the restart decision to the container orchestration.
     if ! jobs | grep --quiet nginx ; then
-      exit 1
+        exit 1
     fi
 done

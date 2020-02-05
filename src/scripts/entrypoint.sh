@@ -35,6 +35,13 @@ while [ true ]; do
     sleep 604810 &
     SLEEP_PID=$!
 
-    # Wait on sleep so that when we get ctrl-c'ed it kills everything due to our trap
-    wait "$SLEEP_PID"
+    # Wait for 1 week sleep or nginx
+    wait -n $SLEEP_PID $NGINX_PID
+
+    # Make sure we do not run container empty (without nginx process).
+    # If nginx quit for whatever reason then stop the container.
+    # Leave the restart decision to the container orchestration.
+    if ! jobs | grep --quiet nginx ; then
+        exit 1
+    fi
 done

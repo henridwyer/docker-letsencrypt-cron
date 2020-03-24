@@ -31,7 +31,7 @@ while [ true ]; do
     # Make sure we do not run container empty (without nginx process).
     # If nginx quit for whatever reason then stop the container.
     # Leave the restart decision to the container orchestration.
-    if ! ps aux | grep --quiet nginx ; then
+    if ! ps aux | grep --quiet [n]ginx ; then
         exit 1
     fi
 

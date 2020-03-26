@@ -73,6 +73,7 @@ services:
             - 443:443/tcp
         environment:
             CERTBOT_EMAIL: owner@company.com
+            # variable names are space-separated
             ENVSUBST_VARS: FQDN
             FQDN: server.company.com
         volumes:

@@ -112,6 +112,7 @@ template_user_configs() {
         echo "no ${SOURCE_DIR}, nothing to do."
     else
         for conf in ${SOURCE_DIR}/*.conf; do
+            echo " -> ${conf}"
             envsubst "${DENV}" <"${conf}" > "${TARGET_DIR}/$(basename ${conf})"
         done
     fi

@@ -8,10 +8,10 @@ EXPOSE 443
 # Do this apt/pip stuff all in one RUN command to avoid creating large
 # intermediate layers on non-squashable docker installs
 RUN apt update && \
-    apt install -y python python-dev libffi6 libffi-dev libssl-dev curl build-essential procps && \
-    curl -L 'https://bootstrap.pypa.io/get-pip.py' | python && \
+    apt install -y python3 python3-dev libffi6 libffi-dev libssl-dev curl build-essential procps && \
+    curl -L 'https://bootstrap.pypa.io/get-pip.py' | python3 && \
     pip install -U cffi certbot && \
-    apt remove --purge -y python-dev build-essential libffi-dev libssl-dev curl && \
+    apt remove --purge -y python3-dev build-essential libffi-dev libssl-dev curl && \
     apt-get autoremove -y && \
     apt-get clean && \
     rm -rf /var/lib/apt/lists/*

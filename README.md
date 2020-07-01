@@ -87,6 +87,9 @@ volumes:
 
 # Changelog
 
+### 1.1
+- Upgraded to Python 3 installed within the environment, various quality of life improvements around initial setup and renewal.
+
 ### 1.0
 - Many improvements thanks to contributors from across the globe.  Together, we have drastically reduced the amount of customization needed; configs can be mounted directly into a prebuilt image, and the configurations can even be templated.
 

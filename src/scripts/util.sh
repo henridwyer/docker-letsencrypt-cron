@@ -8,6 +8,13 @@ error() {
     tput -Tscreen sgr0) >&2
 }
 
+parse_extra_domains() {
+    extra_domains_conf=/etc/certbot/extra_domains/$1
+    if [ -f $extra_domains_conf ]; then 
+        cat $extra_domains_conf | xargs echo
+    fi
+}
+
 # Helper function that sifts through /etc/nginx/conf.d/, looking for lines that
 # contain ssl_certificate_key, and try to find domain names in them.  We accept
 # a very restricted set of keys: Each key must map to a set of concrete domains
@@ -29,7 +36,7 @@ parse_keyfiles() {
 # keyfiles), return 1 otherwise
 keyfiles_exist() {
     for keyfile in $(parse_keyfiles $1); do
-	    currentfile=${keyfile//$'\r'/}
+        currentfile=${keyfile//$'\r'/}
         if [ ! -f $currentfile ]; then
             echo "Couldn't find keyfile $currentfile for $1"
             return 1
@@ -70,10 +77,12 @@ get_certificate() {
         letsencrypt_url=$PRODUCTION_URL
         echo "Production ..."
     fi
+    
+    opt_domains=$(for i in $1; do printf -- "-d $i "; done;)
 
     echo "running certbot ... $letsencrypt_url $1 $2"
     certbot certonly --agree-tos --keep -n --text --email $2 --server \
-        $letsencrypt_url -d $1 --http-01-port 1337 \
+        $letsencrypt_url $opt_domains --http-01-port 1337 \
         --standalone --preferred-challenges http-01 --debug
 }
 

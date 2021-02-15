@@ -21,10 +21,7 @@ parse_extra_domains() {
 # (no wildcards) and each keyfile will be stored at the default location of
 # /etc/letsencrypt/live/<primary_domain_name>/privkey.pem
 parse_domains() {
-    # For each configuration file in /etc/nginx/conf.d/*.conf*
-    for conf_file in /etc/nginx/conf.d/*.conf*; do
-        sed -n -r -e 's&^\s*ssl_certificate_key\s*\/etc/letsencrypt/live/(.*)/privkey.pem;\s*(#.*)?$&\1&p' $conf_file | xargs echo
-    done
+    sed -n -r -e 's&^\s*ssl_certificate_key\s*\/etc/letsencrypt/live/(.*)/privkey.pem;\s*(#.*)?$&\1&p' /etc/nginx/conf.d/*.conf* | sort | uniq | xargs echo
 }
 
 # Given a config file path, spit out all the ssl_certificate_key file paths

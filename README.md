@@ -1,3 +1,8 @@
+# NOTE: This repository is now in maintenance-only mode
+
+There is a [spiritual successor maintained by Jonas Alfredsson](https://github.com/JonasAlfredsson/docker-nginx-certbot/) that has some nice new features and is much more actively maintained.
+I highly suggest all users migrate their docker configs to use that docker image, as it is strictly superior to this one while still maintaning the same ease of use.
+
 # docker-nginx-certbot
 Create and automatically renew website SSL certificates using the free [letsencrypt](https://letsencrypt.org/) certificate authority, and its client [*certbot*](https://certbot.eff.org/), built on top of the [nginx](https://www.nginx.com/) webserver.
 
@@ -86,6 +91,9 @@ volumes:
 ```
 
 # Changelog
+
+### 1.2
+- Officially putting this repository into maintenance-only mode.
 
 ### 1.1
 - Upgraded to Python 3 installed within the environment, various quality of life improvements around initial setup and renewal.

@@ -53,7 +53,7 @@ Note: using a `server` block that listens on port 80 may cause issues with renew
 You may wish to template your configurations, e.g. passing in a hostname so as to be able to run multiple identical copies of this container; one per website.  The docker container will use [`envsubst`](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html) to template all mounted user configs with a user-provided list of environment variables.  Example:
 
 ```nginx
-# In conf.d/nginx_template.conf
+# In user.conf.d/nginx_template.conf
 server {
     listen              443 ssl;
     server_name         ${FQDN};

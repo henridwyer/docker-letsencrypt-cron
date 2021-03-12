@@ -11,7 +11,7 @@ Create a config directory for your custom configs:
 $ mkdir conf.d
 ```
 
-And a `.conf` in that directory:
+And a `*.conf` file in that directory (i.e. `nginx.conf`, but NOT just `.conf`):
 ```nginx
 server {
     listen              443 ssl;

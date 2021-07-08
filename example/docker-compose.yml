@@ -1,0 +1,15 @@
+version: '3'
+
+services:
+  proxy:
+    image: staticfloat/nginx-certbot
+    restart: always
+    environment:
+      CERTBOT_EMAIL: "your.email@example.com"
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./conf.d:/etc/nginx/user.conf.d:ro
+      - ./certbot_extra_domains:/etc/certbot/extra_domains:ro
+

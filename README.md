@@ -1,90 +1,120 @@
-# docker-letsencrypt-cron
-Create and automatically renew website SSL certificates using the letsencrypt free certificate authority, and its client *certbot*.
+# NOTE: This repository is now in maintenance-only mode
 
-This image will renew your certificates every 2 months, and place the lastest ones in the /certs folder in the container, and in the ./certs folder on the host.
+There is a [spiritual successor maintained by Jonas Alfredsson](https://github.com/JonasAlfredsson/docker-nginx-certbot/) that has some nice new features and is much more actively maintained.
+I highly suggest all users migrate their docker configs to use that docker image, as it is strictly superior to this one while still maintaning the same ease of use.
+
+# docker-nginx-certbot
+Create and automatically renew website SSL certificates using the free [letsencrypt](https://letsencrypt.org/) certificate authority, and its client [*certbot*](https://certbot.eff.org/), built on top of the [nginx](https://www.nginx.com/) webserver.
+
+This repository was originally forked from `@henridwyer`, many thanks to him for the good idea.  It has since been completely rewritten, and bears almost no resemblance to the original.  This repository is _much_ more opinionated about the structure of your webservers/containers, however it is easier to use as long as all of your webservers follow the given pattern.
 
 # Usage
 
-## Setup
+Create a config directory for your custom configs:
 
-In docker-compose.yml, change the environment variables:
-- WEBROOT: set this variable to the webroot path if you want to use the webroot plugin. Leave to use the standalone webserver.
-- DOMAINS: a space separated list of domains for which you want to generate certificates.
-- EMAIL: where you will receive updates from letsencrypt.
-- CONCAT: true or false, whether you want to concatenate the certificate's full chain with the private key (required for e.g. haproxy), or keep the two files separate (required for e.g. nginx or apache).
-- SEPARATE: true or false, whether you want one certificate per domain or one certificate valid for all domains. 
-
-## Running
-
-### Using the automated image
-
-```shell
-docker run --name certbot -v `pwd`/certs:/certs --restart always -e "DOMAINS=domain1.com domain2.com" -e "EMAIL=webmaster@domain1.com" -e "CONCAT=true" -e "WEBROOT=" henridwyer/docker-letsencrypt-cron
+```bash
+$ mkdir conf.d
 ```
 
-### Building the image
-
-The easiest way to build the image yourself is to use the provided docker-compose file.
-
-```shell
-docker-compose up -d
-```
-
-The first time you start it up, you may want to run the certificate generation script immediately:
-
-```shell
-docker exec certbot ash -c "/scripts/run_certbot.sh"
-```
-
-At 3AM, on the 1st of every odd month, a cron job will start the script, renewing your certificates.
-
-# ACME Validation challenge
-
-To authenticate the certificates, the you need to pass the ACME validation challenge. This requires requests made on port 80 to your.domain.com/.well-known/ to be forwarded to this container.
-
-The recommended way to use this image is to set up your reverse proxy to automatically forward requests for the ACME validation challenges to this container.
-
-## Haproxy example
-
-If you use a haproxy reverse proxy, you can add the following to your configuration file in order to pass the ACME challenge.
-
-``` haproxy
-frontend http
-  bind *:80
-  acl letsencrypt_check path_beg /.well-known
-
-  use_backend certbot if letsencrypt_check
-
-backend certbot
-  server certbot certbot:80 maxconn 32
-```
-
-## Nginx example
-
-If you use nginx as a reverse proxy, you can add the following to your configuration file in order to pass the ACME challenge.
-
-``` nginx
-upstream certbot_upstream{
-  server certbot:80;
-}
-
+And a `*.conf` file in that directory (i.e. `nginx.conf`, but NOT just `.conf`):
+```nginx
 server {
-  listen              80;
-  location '/.well-known/acme-challenge' {
-    default_type "text/plain";
-    proxy_pass http://certbot_upstream;
-  }
-}
+    listen              443 ssl;
+    server_name         server.company.com;
+    ssl_certificate     /etc/letsencrypt/live/server.company.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/server.company.com/privkey.pem;
 
+    location / {
+        ...
+    }
+}
 ```
 
-# More information
+Wrap this all up with a `docker-compose.yml` file:
+```yml
+version: '3'
+services:
+    frontend:
+        restart: unless-stopped
+        image: staticfloat/nginx-certbot
+        ports:
+            - 80:80/tcp
+            - 443:443/tcp
+        environment:
+            CERTBOT_EMAIL: owner@company.com
+        volumes:
+          - ./conf.d:/etc/nginx/user.conf.d:ro
+          - letsencrypt:/etc/letsencrypt
+volumes:
+    letsencrypt:
+```
 
-Find out more about letsencrypt: https://letsencrypt.org
+Launch that docker-compose file, and you're good to go; `certbot` will automatically request an SSL certificate for any `nginx` sites that look for SSL certificates in `/etc/letsencrypt/live`, and will automatically renew them over time.
 
-Certbot github: https://github.com/certbot/certbot
+Note: using a `server` block that listens on port 80 may cause issues with renewal. This container will already handle forwarding to port 443, so they are unnecessary.
+
+## Templating
+
+You may wish to template your configurations, e.g. passing in a hostname so as to be able to run multiple identical copies of this container; one per website.  The docker container will use [`envsubst`](https://www.gnu.org/software/gettext/manual/html_node/envsubst-Invocation.html) to template all mounted user configs with a user-provided list of environment variables.  Example:
+
+```nginx
+# In user.conf.d/nginx_template.conf
+server {
+    listen              443 ssl;
+    server_name         ${FQDN};
+    ssl_certificate     /etc/letsencrypt/live/${FQDN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${FQDN}/privkey.pem;
+
+    ...
+}
+```
+
+```yml
+version: '3'
+services:
+    frontend:
+        restart: unless-stopped
+        image: staticfloat/nginx-certbot
+        ports:
+            - 80:80/tcp
+            - 443:443/tcp
+        environment:
+            CERTBOT_EMAIL: owner@company.com
+            # variable names are space-separated
+            ENVSUBST_VARS: FQDN
+            FQDN: server.company.com
+        volumes:
+          - ./conf.d:/etc/nginx/user.conf.d:ro
+          - letsencrypt:/etc/letsencrypt
+volumes:
+    letsencrypt:
+```
 
 # Changelog
+
+### 1.2
+- Officially putting this repository into maintenance-only mode.
+
+### 1.1
+- Upgraded to Python 3 installed within the environment, various quality of life improvements around initial setup and renewal.
+
+### 1.0
+- Many improvements thanks to contributors from across the globe.  Together, we have drastically reduced the amount of customization needed; configs can be mounted directly into a prebuilt image, and the configurations can even be templated.
+
+### 0.8
+- Ditch cron, it never liked me anway.  Just use `sleep` and a `while` loop instead.
+
+### 0.7
+- Complete rewrite, build this image on top of the `nginx` image, and run `cron`/`certbot` alongside `nginx` so that we can have nginx configs dynamically enabled as we get SSL certificates.
+
+### 0.6
+- Add `nginx_auto_enable.sh` script to `/etc/letsencrypt/` so that users can bring nginx up before SSL certs are actually available.
+
+### 0.5
+- Change the name to `docker-certbot-cron`, update documentation, strip out even more stuff I don't care about.
+
+### 0.4
+- Rip out a bunch of stuff because `@staticfloat` is a monster, and likes to do things his way
 
 ### 0.3
 - Add support for webroot mode.
